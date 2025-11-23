@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="railway-station.png">
 
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
 
@@ -33,11 +32,13 @@
       justify-content: center;
       line-height: 1.5;
     }
-    header{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+
+    header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
     }
+
     h1 {
       font-size: 1.6rem;
       padding: 0;
@@ -45,15 +46,16 @@
       color: var(--accent);
       margin: 5px 0 30px 5px;
     }
-    #clock{
-        color: var(--accent);
-        font-size: 1.3rem;
-        font-weight: 600;
-        margin: 0 5px 30px 0;
+
+    #clock {
+      color: var(--accent);
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 5px 30px 0;
     }
-    #clock span{
-        font-size: 2rem;
-        font-weight: 800;
+    #clock span {
+      font-size: 2rem;
+      font-weight: 800;
     }
 
     .card {
@@ -88,11 +90,6 @@
       text-align: center;
     }
 
-    .station-buttons button:focus-visible {
-      outline: 3px solid #0066ff;
-      outline-offset: 2px;
-    }
-
     .station-buttons button:hover {
       background: #ececf1;
     }
@@ -103,36 +100,35 @@
       border-color: #000;
     }
 
-    /* Responsive table */
-    .table-wrapper {
-      overflow-x: auto;
-    }
+    /* ------------------------------ */
+    /* RESPONSIVE GRID TABLE          */
+    /* ------------------------------ */
 
-    table {
+    .departures-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr 100px 120px;
+      gap: 0;
+      align-items: center;
       width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-      min-width: 500px;
+      margin-top: 10px;
     }
 
-    thead th {
-      text-align: left;
-      padding: 10px 8px;
+    .departures-grid-header {
+      font-weight: 700;
       border-bottom: 2px solid var(--border);
-      font-weight: 600;
+      padding-bottom: 6px;
     }
 
-    /* tbody tr:nth-child(even) {
-      background: var(--row-alt);
-    } */
-
-    tr{
-        border-bottom: 1px solid #dfdfe6;
+    .departures-row {
+      display: contents;
     }
 
-    td {
-      padding: 10px 8px;
-      vertical-align: middle;
+    .departures-cell {
+      /* padding: 10px 4px; */
+      display: flex;
+      border-bottom: 1px solid #e3e3ea;
+      height: 50px;
+      align-items: center;
     }
 
     .status {
@@ -154,17 +150,49 @@
       color: var(--accent);
     }
 
-    @media (max-width: 480px) {
-      h1 { font-size: 1.4rem; }
-      .station-buttons button { font-size: 0.9rem; padding: 6px 10px; }
-      td, th { padding: 8px 6px; font-size: 0.9rem; }
-      .card {
-            border: none;
+    /* MOBILE CARD VIEW */
+    @media (max-width: 600px) {
+      .departures-grid {
+        display: block;
       }
-      body{
+
+      .departures-grid-header {
+        display: none;
+      }
+
+      .departures-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        margin-bottom: 10px;
+        gap: 6px;
+      }
+
+      .departures-cell {
+        display: block;
+        border-bottom: none;
+        padding: 2px 0;
+      }
+
+      .departures-cell::before {
+        content: attr(data-label);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+      }
+
+      .card {
+        border: none;
+      }
+      body {
         padding: 0;
       }
-      
     }
 
   </style>
@@ -172,11 +200,10 @@
 <body>
 
 <div class="card" role="region" aria-label="Live train departures">
-    <header>
-        <h1>Departures</h1>
-  <div id="clock"></div>
-    </header>
-  
+  <header>
+    <h1>Departures</h1>
+    <div id="clock"></div>
+  </header>
 
   <div class="station-buttons">
     <button data-station="SVG">Stevenage</button>
@@ -184,20 +211,9 @@
     <button data-station="LONDON">London</button>
   </div>
 
-  <div class="table-wrapper">
-    <table id="departures">
-      <thead>
-        <tr>
-          <th scope="col">Time</th>
-          <th scope="col">Destination</th>
-          <th scope="col">Status</th>
-          <th scope="col">Operator</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="4" class="loading">Loading live data…</td></tr>
-      </tbody>
-    </table>
+  <!-- Replaces the old table -->
+  <div id="departures-grid" class="departures-grid">
+    <div class="loading">Loading live data…</div>
   </div>
 </div>
 
@@ -212,30 +228,28 @@
       "KGX": "London Kings Cross"
     }
   };
+
   function startTime() {
     const today = new Date();
     let h = today.getHours();
     let m = today.getMinutes();
     let s = today.getSeconds();
-    m = checkTime(m);
-    s = checkTime(s);
-    document.getElementById('clock').innerHTML =  "<span>" + h + ":" + m + "</span>" + s;
+    m = m < 10 ? "0" + m : m;
+    s = s < 10 ? "0" + s : s;
+    document.getElementById('clock').innerHTML = "<span>" + h + ":" + m + "</span>" + s;
     setTimeout(startTime, 1000);
-}
-
-function checkTime(i) {
-  if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
-  return i;
-}
+  }
 
   async function loadDepartures() {
-    const tbody = document.querySelector('#departures tbody');
+    const grid = document.getElementById("departures-grid");
     try {
       let allServices = [];
       const stations = stationSets[currentStation];
+
       for (const code of Object.keys(stations)) {
         const res = await fetch(`https://huxley2.azurewebsites.net/departures/BDM/to/${code}/30`);
         const json = await res.json();
+
         if (json.trainServices) {
           const services = json.trainServices.map(s => ({
             ...s,
@@ -244,29 +258,41 @@ function checkTime(i) {
           allServices = allServices.concat(services);
         }
       }
+
       allServices.sort((a, b) => a.std.localeCompare(b.std));
+
       if (!allServices.length) {
-        tbody.innerHTML =
-          `<tr><td colspan="4" class="error">No live services available.</td></tr>`;
+        grid.innerHTML = `<div class="error">No live services available.</div>`;
         return;
       }
-      tbody.innerHTML = allServices.slice(0,40).map(s => {
+
+      grid.innerHTML = `
+        <div class="departures-grid-header">Time</div>
+        <div class="departures-grid-header">Destination</div>
+        <div class="departures-grid-header">Status</div>
+        <div class="departures-grid-header">Operator</div>
+      `;
+
+      grid.innerHTML += allServices.slice(0, 40).map(s => {
         const etd = s.etd.toLowerCase();
-        let cls = etd.includes('cancel') ? 'cancelled'
-                : etd.includes('on time') ? 'on-time'
-                : 'delayed';
+        const cls = etd.includes("cancel") ? "cancelled" :
+                    etd.includes("on time") ? "on-time" :
+                    "delayed";
+
         return `
-          <tr>
-            <td>${s.std}</td>
-            <td>${s.destinationName}</td>
-            <td><span class="status ${cls}">${s.etd}</span></td>
-            <td>${s.operator}</td>
-          </tr>
+          <div class="departures-row">
+            <div class="departures-cell" data-label="Time">${s.std}</div>
+            <div class="departures-cell" data-label="Destination">${s.destinationName}</div>
+            <div class="departures-cell" data-label="Status">
+              <span class="status ${cls}">${s.etd}</span>
+            </div>
+            <div class="departures-cell" data-label="Operator">${s.operator}</div>
+          </div>
         `;
       }).join('');
+
     } catch (e) {
-      tbody.innerHTML =
-        `<tr><td colspan="4" class="error">Error loading data</td></tr>`;
+      grid.innerHTML = `<div class="error">Error loading data</div>`;
     }
   }
 
