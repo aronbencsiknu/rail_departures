@@ -196,7 +196,7 @@
       let allServices = [];
       const stations = stationSets[currentStation];
       for (const code of Object.keys(stations)) {
-        const res = await fetch(`https://huxley2.azurewebsites.net/departures/BDM/to/${code}/20`);
+        const res = await fetch(`https://huxley2.azurewebsites.net/departures/BDM/to/${code}/30`);
         const json = await res.json();
         if (json.trainServices) {
           const services = json.trainServices.map(s => ({
@@ -212,7 +212,7 @@
           `<tr><td colspan="4" class="error">No live services available.</td></tr>`;
         return;
       }
-      tbody.innerHTML = allServices.slice(0, 20).map(s => {
+      tbody.innerHTML = allServices.slice(0,30).map(s => {
         const etd = s.etd.toLowerCase();
         let cls = etd.includes('cancel') ? 'cancelled'
                 : etd.includes('on time') ? 'on-time'
