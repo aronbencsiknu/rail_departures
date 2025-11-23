@@ -14,7 +14,7 @@
       --bg: #f4f4f6;
       --card-bg: #ffffff;
       --text: #1a1a1a;
-      --accent: #000;
+      --accent: #0019a8;
       --border: #d4d4db;
       --row-alt: #fafafa;
 
@@ -33,13 +33,27 @@
       justify-content: center;
       line-height: 1.5;
     }
-
+    header{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
     h1 {
-      text-align: center;
       font-size: 1.6rem;
-      margin-bottom: 16px;
+      padding: 0;
       font-weight: 600;
       color: var(--accent);
+      margin: 5px 0 30px 5px;
+    }
+    #clock{
+        color: var(--accent);
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 5px 30px 0;
+    }
+    #clock span{
+        font-size: 2rem;
+        font-weight: 800;
     }
 
     .card {
@@ -84,7 +98,7 @@
     }
 
     .station-buttons button.active {
-      background: #000;
+      background: var(--accent);
       color: #fff;
       border-color: #000;
     }
@@ -108,8 +122,12 @@
       font-weight: 600;
     }
 
-    tbody tr:nth-child(even) {
+    /* tbody tr:nth-child(even) {
       background: var(--row-alt);
+    } */
+
+    tr{
+        border-bottom: 1px solid #dfdfe6;
     }
 
     td {
@@ -154,8 +172,11 @@
 <body>
 
 <div class="card" role="region" aria-label="Live train departures">
-
-  <h1>Hitchin – Live Departures</h1>
+    <header>
+        <h1>Departures</h1>
+  <div id="clock"></div>
+    </header>
+  
 
   <div class="station-buttons">
     <button data-station="SVG">Stevenage</button>
@@ -191,6 +212,21 @@
       "KGX": "London Kings Cross"
     }
   };
+  function startTime() {
+    const today = new Date();
+    let h = today.getHours();
+    let m = today.getMinutes();
+    let s = today.getSeconds();
+    m = checkTime(m);
+    s = checkTime(s);
+    document.getElementById('clock').innerHTML =  "<span>" + h + ":" + m + "</span>" + s;
+    setTimeout(startTime, 1000);
+}
+
+function checkTime(i) {
+  if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+  return i;
+}
 
   async function loadDepartures() {
     const tbody = document.querySelector('#departures tbody');
@@ -248,6 +284,7 @@
     document.querySelector('[data-station="LONDON"]').classList.add("active");
     loadDepartures();
     setInterval(loadDepartures, 30000);
+    startTime();
   });
 </script>
 
