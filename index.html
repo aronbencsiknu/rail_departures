@@ -214,7 +214,7 @@
           `<tr><td colspan="4" class="error">No live services available.</td></tr>`;
         return;
       }
-      tbody.innerHTML = allServices.slice(0,30).map(s => {
+      tbody.innerHTML = allServices.slice(0,40).map(s => {
         const etd = s.etd.toLowerCase();
         let cls = etd.includes('cancel') ? 'cancelled'
                 : etd.includes('on time') ? 'on-time'
