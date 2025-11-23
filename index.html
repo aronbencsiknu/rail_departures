@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hitchin Live Departures</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
+
+    :root {
+      --bg: #f4f4f6;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --accent: #000;
+      --border: #d4d4db;
+      --row-alt: #fafafa;
+
+      --on-time: #0b8f52;
+      --delayed: #c67b00;
+      --cancelled: #b81414;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Atkinson Hyperlegible Next", sans-serif;
+      display: flex;
+      justify-content: center;
+      line-height: 1.5;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 900px;
+      box-sizing: border-box;
+    }
+
+    .station-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .station-buttons button {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+      flex: 1 1 auto;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .station-buttons button:focus-visible {
+      outline: 3px solid #0066ff;
+      outline-offset: 2px;
+    }
+
+    .station-buttons button:hover {
+      background: #ececf1;
+    }
+
+    .station-buttons button.active {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+    }
+
+    /* Responsive table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      min-width: 500px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--row-alt);
+    }
+
+    td {
+      padding: 10px 8px;
+      vertical-align: middle;
+    }
+
+    .status {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #fff;
+      display: inline-block;
+    }
+    .on-time { background: var(--on-time); }
+    .delayed { background: var(--delayed); }
+    .cancelled { background: var(--cancelled); }
+
+    .loading, .error {
+      padding: 16px;
+      text-align: center;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.4rem; }
+      .station-buttons button { font-size: 0.9rem; padding: 6px 10px; }
+      td, th { padding: 8px 6px; font-size: 0.9rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="card" role="region" aria-label="Live train departures">
+
+  <h1>Hitchin – Live Departures</h1>
+
+  <div class="station-buttons">
+    <button data-station="SVG">Stevenage</button>
+    <button data-station="LWG">Letchworth</button>
+    <button data-station="LONDON">London</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="departures">
+      <thead>
+        <tr>
+          <th scope="col">Time</th>
+          <th scope="col">Destination</th>
+          <th scope="col">Status</th>
+          <th scope="col">Operator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" class="loading">Loading live data…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let currentStation = "LONDON";
+
+  const stationSets = {
+    "SVG": { "SVG": "Stevenage" },
+    "LWG": { "LET": "Letchworth" },
+    "LONDON": {
+      "STP": "London St Pancras",
+      "KGX": "London Kings Cross"
+    }
+  };
+
+  async function loadDepartures() {
+    const tbody = document.querySelector('#departures tbody');
+    try {
+      let allServices = [];
+      const stations = stationSets[currentStation];
+      for (const code of Object.keys(stations)) {
+        const res = await fetch(`https://huxley2.azurewebsites.net/departures/HIT/to/${code}`);
+        const json = await res.json();
+        if (json.trainServices) {
+          const services = json.trainServices.map(s => ({
+            ...s,
+            destinationName: stations[code]
+          }));
+          allServices = allServices.concat(services);
+        }
+      }
+      allServices.sort((a, b) => a.std.localeCompare(b.std));
+      if (!allServices.length) {
+        tbody.innerHTML =
+          `<tr><td colspan="4" class="error">No live services available.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = allServices.slice(0, 10).map(s => {
+        const etd = s.etd.toLowerCase();
+        let cls = etd.includes('cancel') ? 'cancelled'
+                : etd.includes('on time') ? 'on-time'
+                : 'delayed';
+        return `
+          <tr>
+            <td>${s.std}</td>
+            <td>${s.destinationName}</td>
+            <td><span class="status ${cls}">${s.etd}</span></td>
+            <td>${s.operator}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML =
+        `<tr><td colspan="4" class="error">Error loading data</td></tr>`;
+    }
+  }
+
+  document.querySelectorAll(".station-buttons button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".station-buttons button")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentStation = btn.dataset.station;
+      loadDepartures();
+    });
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('[data-station="LONDON"]').classList.add("active");
+    loadDepartures();
+    setInterval(loadDepartures, 30000);
+  });
+</script>
+
+</body>
+</html>
