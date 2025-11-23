@@ -189,7 +189,7 @@
       let allServices = [];
       const stations = stationSets[currentStation];
       for (const code of Object.keys(stations)) {
-        const res = await fetch(`https://huxley2.azurewebsites.net/departures/HIT/to/${code}`);
+        const res = await fetch(`https://huxley2.azurewebsites.net/departures/BDM/to/${code}`);
         const json = await res.json();
         if (json.trainServices) {
           const services = json.trainServices.map(s => ({
