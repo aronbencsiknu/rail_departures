@@ -254,7 +254,7 @@
       const stations = stationSets[currentStation];
 
       for (const code of Object.keys(stations)) {
-        const res = await fetch(`https://huxley2.azurewebsites.net/departures/BDM/to/${code}/30`);
+        const res = await fetch(`https://huxley2.azurewebsites.net/departures/HIT/to/${code}/30`);
         const json = await res.json();
 
         if (json.trainServices) {
@@ -305,6 +305,8 @@
 
   document.querySelectorAll(".station-buttons button").forEach(btn => {
     btn.addEventListener("click", () => {
+        const grid = document.getElementById("departures-grid");
+        grid.innerHTML = `<div class="loading">Loading live data…</div>`;
       document.querySelectorAll(".station-buttons button")
         .forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
