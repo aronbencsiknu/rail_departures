@@ -150,6 +150,18 @@
       font-size: 1rem;
       color: var(--accent);
     }
+    .rail-logo { 
+    width: 70px;                /* change size as needed */
+    height: 50px;               /* keep aspect ratio by adjusting both */
+    background-color: var(--accent);
+    margin-left: 10px;
+    /* center and contain the SVG mask */
+    -webkit-mask: url("https://upload.wikimedia.org/wikipedia/commons/3/31/National_Rail_logo.svg") center / contain no-repeat;
+    mask: url("https://upload.wikimedia.org/wikipedia/commons/3/31/National_Rail_logo.svg") center / contain no-repeat;
+    /* ensure high-contrast fallback if masks not supported */
+    background-repeat: no-repeat;
+    display: inline-block;
+  }
 
     /* MOBILE CARD VIEW */
     @media (max-width: 600px) {
@@ -200,6 +212,7 @@
       body {
         padding: 0;
       }
+      
     }
 
   </style>
@@ -208,7 +221,7 @@
 
 <div class="card" role="region" aria-label="Live train departures">
   <header>
-    <h1>Departures</h1>
+    <div class="rail-logo" role="img" aria-label="National Rail logo"></div>
     <div id="clock"></div>
   </header>
 
